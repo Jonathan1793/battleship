@@ -19,7 +19,12 @@ const generateGrid = (size) => {
 let playBoard = generateGrid(gridSize);
 
 const generateShips = (grid) => {
-  let ship1 =
+  let ship1 = 1;
+  let ship2 = 2;
+  let ship3 = 3;
+  let ship4 = 4;
+  let ship5 = 6;
+  /*   let ship1 =
     grid[Math.floor(Math.random() * gridSize)][
       Math.floor(Math.random() * gridSize)
     ];
@@ -31,7 +36,7 @@ const generateShips = (grid) => {
   if (ship1 === ship2) {
     generateShips(grid);
   }
-  return [ship1, ship2];
+  return [ship1, ship2]; */
 };
 
 const playGame = (grid, ship1, ship2) => {
@@ -84,7 +89,7 @@ const playGame = (grid, ship1, ship2) => {
       }
     }
 
-    // console.table(grid);
+    console.table(grid);
   }
   let playAgain = readLine.keyInYN(
     "You have destroyed all battleships. Would you like to play again? "
