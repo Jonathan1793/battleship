@@ -1,6 +1,7 @@
 //variables
 const readLine = require("readline-sync");
 const gridSize = 10;
+let stuckCounter = 0;
 
 readLine.keyInPause("Press any key to start the game");
 
@@ -17,6 +18,49 @@ const generateGrid = (size) => {
   return grids;
 };
 let playBoard = generateGrid(gridSize);
+
+const checkForHorizontalSpace = (grid, ship, randomNumber, displacement) => {
+  //checks if the ship, fits into the grid if not, it tries to reposition it
+
+  console.log(`we are in horizontal`);
+  for (let i = 0; i < ship.hitPoints; i++) {
+    if (grid[randomNumber][i + displacement].length === 3) {
+      console.log(`it's occupied `);
+      randomNumber = Math.floor(Math.random() * gridSize);
+      stuckCounter++;
+      console.log(`Times Stuck in horizontal ${stuckCounter}`);
+      if (stuckCounter > ship.hitPoints + 1) {
+        displacement--;
+        console.log(displacement);
+      }
+      if (displacement === -1) {
+        displacement = Math.floor(Math.random() * (maxDisplacement + 1));
+      }
+      checkForHorizontalSpace(grid, ship, randomNumber, displacement);
+    }
+  }
+  return true;
+};
+
+const checkForVerticalSpace = (grid, ship, randomNumber, displacement) => {
+  console.log(`we are in vertical`);
+  for (let i = 0; i < ship.hitPoints; i++) {
+    if (grid[i + displacement][randomNumber].length === 3) {
+      console.log(`it's occupied `);
+      randomNumber = Math.floor(Math.random() * gridSize);
+      stuckCounter++;
+      console.log(`Times Stuck in vertical ${stuckCounter}`);
+      if (stuckCounter > ship.hitPoints + 1) {
+        displacement--;
+      }
+      if (displacement === -1) {
+        displacement = Math.floor(Math.random() * (maxDisplacement + 1));
+      }
+      checkForVerticalSpace(grid, ship, randomNumber, displacement);
+    }
+  }
+  return true;
+};
 
 const generateShips = (grid) => {
   const ships = [
@@ -72,39 +116,13 @@ const generateShips = (grid) => {
     let maxDisplacement = gridSize - ship.hitPoints;
     let displacement = Math.floor(Math.random() * (maxDisplacement + 1));
     let randomNumber = Math.floor(Math.random() * gridSize);
-    let stuckCounter = 0;
+
     let boundaryReached = false;
 
-    case12: switch (shipOrientation) {
+    switch (shipOrientation) {
       case 0: //Horizontal Orientation
         try {
-          const checkForHorizontalSpace = () => {
-            console.log(`we are in horizontal`);
-            console.log(`Random Number : ${randomNumber}`);
-            console.log(`Displacement : ${displacement}`);
-            for (let i = 0; i < ship.hitPoints; i++) {
-              if (grid[randomNumber][i + displacement].length === 3) {
-                console.log(`it's occupied `);
-                randomNumber = Math.floor(Math.random() * gridSize);
-                stuckCounter++;
-                console.log(`Times Stuck in horizontal ${stuckCounter}`);
-                if (stuckCounter > ship.hitPoints + 1) {
-                  displacement--;
-                  console.log(displacement);
-                }
-                if (displacement === -1) {
-                  displacement = Math.floor(
-                    Math.random() * (maxDisplacement + 1)
-                  );
-                }
-                checkForHorizontalSpace();
-              }
-            }
-            return true;
-          };
-          checkForHorizontalSpace();
-
-          if (checkForHorizontalSpace) {
+          if (checkForHorizontalSpace(grid, ship, randomNumber, displacement)) {
             for (let j = 0; j < ship.hitPoints; j++) {
               ship.positions.push(grid[randomNumber][j + displacement]);
               grid[randomNumber][j + displacement] =
@@ -122,35 +140,9 @@ const generateShips = (grid) => {
       case 1: //Vertical Orientation
         let originalPosition = displacement;
         try {
-          const checkForVerticalSpace = () => {
-            console.log(`we are in vertical`);
-            console.log(`Random Number : ${randomNumber}`);
-            console.log(`Displacement : ${displacement}`);
-            for (let i = 0; i < ship.hitPoints; i++) {
-              if (grid[i + displacement][randomNumber].length === 3) {
-                console.log(`it's occupied `);
-                randomNumber = Math.floor(Math.random() * gridSize);
-                stuckCounter++;
-                console.log(`Times Stuck in vertical ${stuckCounter}`);
-                if (stuckCounter > ship.hitPoints + 1) {
-                  displacement--;
-                }
-                if (displacement === -1) {
-                  displacement = Math.floor(
-                    Math.random() * (maxDisplacement + 1)
-                  );
-                }
-                checkForVerticalSpace();
-              }
-            }
-            return true;
-          };
-          checkForVerticalSpace();
-
-          if (checkForVerticalSpace) {
+          if (checkForVerticalSpace(grid, ship, randomNumber, displacement)) {
             for (let j = 0; j < ship.hitPoints; j++) {
               ship.positions.push(grid[j + displacement][randomNumber]);
-
               grid[j + displacement][randomNumber] =
                 grid[j + displacement][randomNumber] + ship.symbol;
             }
@@ -182,10 +174,11 @@ const playGame = (grid, ships) => {
       .question("choose a position to strike: (ie: 'A1')  ")
       .toUpperCase();
 
-    if (strike.length === 1 || strike.length > 2) {
+    if (strike.length === 1 || strike.length > 3) {
       console.log("choose a correct location");
       continue;
     }
+
     if (locationsVisited.includes(strike)) {
       console.log("You have already picked this location. Miss!");
       continue;
