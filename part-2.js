@@ -1,6 +1,6 @@
 //variables
 const readLine = require("readline-sync");
-const gridSize = 7;
+const gridSize = 10;
 
 readLine.keyInPause("Press any key to start the game");
 
@@ -25,7 +25,7 @@ const generateShips = (grid) => {
       hitPoints: 5,
       positions: [],
       destroyed() {
-        console.log("You have destroyed the Carrier");
+        console.log("You have destroyed the " + this.name);
       },
       symbol: "%",
     },
@@ -34,7 +34,7 @@ const generateShips = (grid) => {
       hitPoints: 4,
       positions: [],
       destroyed() {
-        console.log("You have destroyed the Battleship");
+        console.log("You have destroyed the " + this.name);
       },
       symbol: "$",
     },
@@ -43,7 +43,7 @@ const generateShips = (grid) => {
       hitPoints: 3,
       positions: [],
       destroyed() {
-        console.log("You have destroyed the Cruiser");
+        console.log("You have destroyed the " + this.name);
       },
       symbol: "#",
     },
@@ -52,7 +52,7 @@ const generateShips = (grid) => {
       hitPoints: 3,
       positions: [],
       destroyed() {
-        console.log("You have destroyed the Submarine");
+        console.log("You have destroyed the " + this.name);
       },
       symbol: "@",
     },
@@ -61,7 +61,7 @@ const generateShips = (grid) => {
       hitPoints: 2,
       positions: [],
       destroyed() {
-        console.log("You have destroyed the Destroyer");
+        console.log("You have destroyed the " + this.name);
       },
       symbol: "&",
     },
@@ -72,54 +72,94 @@ const generateShips = (grid) => {
     let maxDisplacement = gridSize - ship.hitPoints;
     let displacement = Math.floor(Math.random() * (maxDisplacement + 1));
     let randomNumber = Math.floor(Math.random() * gridSize);
+    let stuckCounter = 0;
+    let boundaryReached = false;
 
-    switch (shipOrientation) {
+    case12: switch (shipOrientation) {
       case 0: //Horizontal Orientation
-        const checkForHorizontalSpace = () => {
-          for (let i = 0; i < ship.hitPoints; i++) {
-            if (grid[randomNumber][i + displacement].length === 3) {
-              console.log(`it's occupied `);
-              randomNumber = Math.floor(Math.random() * gridSize);
-              checkForHorizontalSpace();
+        try {
+          const checkForHorizontalSpace = () => {
+            console.log(`we are in horizontal`);
+            console.log(`Random Number : ${randomNumber}`);
+            console.log(`Displacement : ${displacement}`);
+            for (let i = 0; i < ship.hitPoints; i++) {
+              if (grid[randomNumber][i + displacement].length === 3) {
+                console.log(`it's occupied `);
+                randomNumber = Math.floor(Math.random() * gridSize);
+                stuckCounter++;
+                console.log(`Times Stuck in horizontal ${stuckCounter}`);
+                if (stuckCounter > ship.hitPoints + 1) {
+                  displacement--;
+                  console.log(displacement);
+                }
+                if (displacement === -1) {
+                  displacement = Math.floor(
+                    Math.random() * (maxDisplacement + 1)
+                  );
+                }
+                checkForHorizontalSpace();
+              }
             }
-          }
-          return true;
-        };
-        checkForHorizontalSpace();
+            return true;
+          };
+          checkForHorizontalSpace();
 
-        if (checkForHorizontalSpace) {
-          for (let j = 0; j < ship.hitPoints; j++) {
-            ship.positions.push(grid[randomNumber][j + displacement]);
-            grid[randomNumber][j + displacement] =
-              grid[randomNumber][j + displacement] + ship.symbol;
-          }
+          if (checkForHorizontalSpace) {
+            for (let j = 0; j < ship.hitPoints; j++) {
+              ship.positions.push(grid[randomNumber][j + displacement]);
+              grid[randomNumber][j + displacement] =
+                grid[randomNumber][j + displacement] + ship.symbol;
+            }
 
-          console.table(grid);
+            console.table(grid);
+          }
+        } catch (err) {
+          console.error(`the error is ${err}`);
         }
+
         continue;
 
       case 1: //Vertical Orientation
-        const checkForVerticalSpace = () => {
-          for (let i = 0; i < ship.hitPoints; i++) {
-            if (grid[i + displacement][randomNumber].length === 3) {
-              console.log(`it's occupied `);
-              randomNumber = Math.floor(Math.random() * gridSize);
-              checkForVerticalSpace();
+        let originalPosition = displacement;
+        try {
+          const checkForVerticalSpace = () => {
+            console.log(`we are in vertical`);
+            console.log(`Random Number : ${randomNumber}`);
+            console.log(`Displacement : ${displacement}`);
+            for (let i = 0; i < ship.hitPoints; i++) {
+              if (grid[i + displacement][randomNumber].length === 3) {
+                console.log(`it's occupied `);
+                randomNumber = Math.floor(Math.random() * gridSize);
+                stuckCounter++;
+                console.log(`Times Stuck in vertical ${stuckCounter}`);
+                if (stuckCounter > ship.hitPoints + 1) {
+                  displacement--;
+                }
+                if (displacement === -1) {
+                  displacement = Math.floor(
+                    Math.random() * (maxDisplacement + 1)
+                  );
+                }
+                checkForVerticalSpace();
+              }
             }
-          }
-          return true;
-        };
-        checkForVerticalSpace();
+            return true;
+          };
+          checkForVerticalSpace();
 
-        if (checkForVerticalSpace) {
-          for (let j = 0; j < ship.hitPoints; j++) {
-            ship.positions.push(grid[j + displacement][randomNumber]);
+          if (checkForVerticalSpace) {
+            for (let j = 0; j < ship.hitPoints; j++) {
+              ship.positions.push(grid[j + displacement][randomNumber]);
 
-            grid[j + displacement][randomNumber] =
-              grid[j + displacement][randomNumber] + ship.symbol;
+              grid[j + displacement][randomNumber] =
+                grid[j + displacement][randomNumber] + ship.symbol;
+            }
+            console.table(grid);
           }
-          console.table(grid);
+        } catch (err) {
+          console.log(`the error is ${err}`);
         }
+
         continue;
 
       default:
@@ -134,60 +174,72 @@ const generateShips = (grid) => {
 
 const playGame = (grid, ships) => {
   // console.log(ship1, ship2);
-
-  console.log(ships);
   const locationsVisited = [];
   let shipCounter = 5;
   while (shipCounter > 0) {
+    let shipsChecked = 0;
     let strike = readLine
       .question("choose a position to strike: (ie: 'A1')  ")
       .toUpperCase();
 
-    if (strike.length === 1) {
+    if (strike.length === 1 || strike.length > 2) {
       console.log("choose a correct location");
       continue;
     }
     if (locationsVisited.includes(strike)) {
       console.log("You have already picked this location. Miss!");
-    } else {
-      for (let ship of ships) {
-        if (ship.positions.includes(strike)) {
-          console.log("you hit something");
-        }
-      }
-      shipCounter -= 1;
-      console.log(
-        `Hit. You have sunk a battleship. ${shipCounter} ship remaining`
-      );
-
-      locationsVisited.push(strike);
-      for (let i = 0; i < grid.length; i++) {
-        for (let j = 0; j < grid[i].length; j++) {
-          if (grid[i][j] === strike) {
-            grid[i][j] = "X";
-          }
-        }
-      }
-    } /* else {
+      continue;
+    }
+    for (let ship of ships) {
       let inGrid = 0;
-      console.log("You have missed!");
       locationsVisited.push(strike);
-      for (let i = 0; i < grid.length; i++) {
-        for (let j = 0; j < grid[i].length; j++) {
-          if (grid[i][j].includes(strike)) {
-            inGrid++;
-          }
+      if (ship.positions.includes(strike)) {
+        ship.hitPoints = ship.hitPoints - 1;
+        console.log(
+          `you hit the ${ship.name} and it has ${ship.hitPoints} HP left`
+        );
+        let indexOfStrike = ship.positions.findIndex(
+          (element) => element === strike
+        );
+        ship.positions.splice(
+          ship.positions.findIndex((element) => element === strike),
+          1
+        );
+        // console.log(ship.positions);
 
-          if (grid[i][j] === strike) {
-            grid[i][j] = "O";
+        if (ship.positions.length === 0) {
+          ship.destroyed();
+          shipCounter--;
+        }
+        locationsVisited.push(strike);
+        for (let i = 0; i < grid.length; i++) {
+          for (let j = 0; j < grid[i].length; j++) {
+            if (grid[i][j] === strike) {
+              grid[i][j] = ship.symbol;
+            }
           }
         }
+      } else {
+        shipsChecked++;
       }
-      if (inGrid === 0) {
-        console.log("because this position in not in the grid");
-        locationsVisited.pop();
+      if (shipsChecked === 5) {
+        console.log(`You missed!`);
+        for (let i = 0; i < grid.length; i++) {
+          for (let j = 0; j < grid[i].length; j++) {
+            if (grid[i][j].includes(strike)) {
+              inGrid++;
+            }
+            if (grid[i][j] === strike) {
+              grid[i][j] = "O";
+            }
+          }
+        }
+        if (inGrid === 0) {
+          console.log(`Because this position is not in the Grid`);
+          locationsVisited.pop();
+        }
       }
-    } */
+    }
 
     console.table(grid);
   }
@@ -195,10 +247,9 @@ const playGame = (grid, ships) => {
     "You have destroyed all battleships. Would you like to play again? "
   );
   if (playAgain) {
-    playGame(generateGrid(gridSize), ...generateShips(playBoard));
+    playGame(generateGrid(gridSize), generateShips(generateGrid(gridSize)));
   } else {
     console.log("have a great day");
   }
 };
-
 playGame(generateGrid(gridSize), generateShips(playBoard));
